@@ -10,7 +10,7 @@ body {
   max-width: 700px;
   margin: 40px auto;
   padding: 20px;
-  background-image: url("background.jpg"); /* ← твой фон */
+  background-image: url("background.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -62,27 +62,29 @@ button {
 const questions = [
   {
     audio: "q1.mp3",
-    short: ["七点五分"],
-    full: ["他昨天早上七点五分起床。"]
+    short: ["七点半"],
+    full: ["她七点半起床。"]
   },
   {
     audio: "q2.mp3",
-    short: ["夜里一点"],
-    full: ["他今天夜里一点吃晚饭。"]
+    short: ["九点"],
+    full: ["她早上九点起床。"]
   },
   {
     audio: "q3.mp3",
-    short: ["我妹妹星期天中午跳舞。"],
-    full: ["我妹妹星期天中午跳舞。我没有姐姐。"]
+    short: ["八点四十分"],
+    full: ["她八点四十分到学校。"]
   },
   {
     audio: "q4.mp3",
-    short: ["晚上九点一刻"],
-    full: ["我的朋友星期六晚上九点一刻睡觉。"]
+    short: ["十二点一刻"],
+    full: ["她十二点一刻吃午饭。"]
   }
 ];
 
 let current = 0;
+let wrongAttempts = 0;
+let correctCount = 0;
 
 const audioEl = document.getElementById("audio");
 const answerEl = document.getElementById("answer");
@@ -90,12 +92,11 @@ const resultEl = document.getElementById("result");
 const titleEl = document.getElementById("question-title");
 const buttonEl = document.getElementById("checkBtn");
 
-/* 🔑 КЛЮЧЕВАЯ ФУНКЦИЯ */
 function normalize(str) {
   return str
     .normalize("NFKC")
     .replace(/\s+/g, "")
-    .replace(/他/g, "她")   // ← 他 и 她 считаем одинаковыми
+    .replace(/他/g, "她")   // 他 / 她 считаем одинаковыми
     .trim();
 }
 
@@ -105,6 +106,7 @@ function loadQuestion() {
   audioEl.load();
   answerEl.value = "";
   resultEl.textContent = "";
+  wrongAttempts = 0; // сброс попыток на новом вопросе
 }
 
 function checkAnswer() {
@@ -129,25 +131,47 @@ function checkAnswer() {
   if (fullAnswers.includes(user)) {
     resultEl.textContent = "Верно";
     resultEl.style.color = "green";
+    correctCount++;
 
-    setTimeout(() => {
-      current++;
-      if (current < questions.length) {
-        loadQuestion();
-      } else {
-        titleEl.textContent = "Готово";
-        audioEl.style.display = "none";
-        answerEl.style.display = "none";
-        buttonEl.style.display = "none";
-        resultEl.textContent = "Все вопросы выполнены";
-        resultEl.style.color = "black";
-      }
-    }, 800);
-
-  } else {
-    resultEl.textContent = "Неверно";
-    resultEl.style.color = "red";
+    setTimeout(nextQuestion, 800);
+    return;
   }
+
+  // неверный ответ
+  wrongAttempts++;
+
+  if (wrongAttempts < 3) {
+    resultEl.textContent =
+      "Неверно. Попытка " + wrongAttempts + " из 3";
+    resultEl.style.color = "red";
+  } else {
+    resultEl.textContent =
+      "Неверно. Переходим к следующему вопросу";
+    resultEl.style.color = "red";
+
+    setTimeout(nextQuestion, 1000);
+  }
+}
+
+function nextQuestion() {
+  current++;
+
+  if (current < questions.length) {
+    loadQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz() {
+  titleEl.textContent = "Готово";
+  audioEl.style.display = "none";
+  answerEl.style.display = "none";
+  buttonEl.style.display = "none";
+
+  resultEl.textContent =
+    correctCount + " из " + questions.length + " вопросов выполнены верно";
+  resultEl.style.color = "black";
 }
 
 loadQuestion();
