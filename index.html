@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Аудио-викторина</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+  background-image: url("background.jpg"); /* ← твой фон */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  font-size: 16px;
+}
+
+#result {
+  margin-top: 15px;
+  font-weight: bold;
+  min-height: 24px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2 id="question-title"></h2>
+
+  <audio id="audio" controls></audio>
+
+  <input type="text" id="answer" placeholder="Введите ответ">
+
+  <button id="checkBtn" onclick="checkAnswer()">Проверить</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    audio: "q1.mp3",
+    short: ["七点五分"],
+    full: ["他昨天早上七点五分起床。"]
+  },
+  {
+    audio: "q2.mp3",
+    short: ["夜里一点"],
+    full: ["他今天夜里一点吃晚饭。"]
+  },
+  {
+    audio: "q3.mp3",
+    short: ["我妹妹星期天中午跳舞。"],
+    full: ["我妹妹星期天中午跳舞。我没有姐姐。"]
+  },
+  {
+    audio: "q4.mp3",
+    short: ["晚上九点一刻"],
+    full: ["我的朋友星期六晚上九点一刻睡觉。"]
+  }
+];
+
+let current = 0;
+
+const audioEl = document.getElementById("audio");
+const answerEl = document.getElementById("answer");
+const resultEl = document.getElementById("result");
+const titleEl = document.getElementById("question-title");
+const buttonEl = document.getElementById("checkBtn");
+
+/* 🔑 КЛЮЧЕВАЯ ФУНКЦИЯ */
+function normalize(str) {
+  return str
+    .normalize("NFKC")
+    .replace(/\s+/g, "")
+    .replace(/他/g, "她")   // ← 他 и 她 считаем одинаковыми
+    .trim();
+}
+
+function loadQuestion() {
+  titleEl.textContent = "Вопрос " + (current + 1);
+  audioEl.src = questions[current].audio;
+  audioEl.load();
+  answerEl.value = "";
+  resultEl.textContent = "";
+}
+
+function checkAnswer() {
+  const user = normalize(answerEl.value);
+
+  if (!user) {
+    resultEl.textContent = "Введите ответ";
+    resultEl.style.color = "orange";
+    return;
+  }
+
+  const shortAnswers = questions[current].short.map(normalize);
+  const fullAnswers = questions[current].full.map(normalize);
+
+  if (shortAnswers.includes(user)) {
+    resultEl.textContent =
+      "Нужно полное предложение, включая точку в конце";
+    resultEl.style.color = "orange";
+    return;
+  }
+
+  if (fullAnswers.includes(user)) {
+    resultEl.textContent = "Верно";
+    resultEl.style.color = "green";
+
+    setTimeout(() => {
+      current++;
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        titleEl.textContent = "Готово";
+        audioEl.style.display = "none";
+        answerEl.style.display = "none";
+        buttonEl.style.display = "none";
+        resultEl.textContent = "Все вопросы выполнены";
+        resultEl.style.color = "black";
+      }
+    }, 800);
+
+  } else {
+    resultEl.textContent = "Неверно";
+    resultEl.style.color = "red";
+  }
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
